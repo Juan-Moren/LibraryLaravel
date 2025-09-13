@@ -77,11 +77,6 @@ class BookController extends Controller
     }
 
     // Catálogo para estudiantes y docentes
-    public function catalogIndex()
-    {
-        $books = Book::latest()->paginate(10);
-        return view('catalog.books.index', compact('books'));
-    }
 
     public function catalogShow(Book $book)
     {
@@ -98,5 +93,17 @@ class BookController extends Controller
             ->get();
 
         return view('books.search', compact('books', 'query'));
+    }
+    public function catalogIndex(Request $request)
+    {
+        $q = $request->input('q'); // lo que viene del input "q"
+
+        $books = Book::when($q, function ($query, $q) {
+            return $query->where('title', 'like', "%$q%")
+                ->orWhere('author', 'like', "%$q%")
+                ->orWhere('isbn', 'like', "%$q%");
+        })->paginate(10); // 👈 usa paginate para que funcione $books->links()
+
+        return view('catalog.books.index', compact('books'));
     }
 }
